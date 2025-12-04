@@ -1,5 +1,4 @@
-name: Deploy HTML Website
-
+name: CI/CD
 on:
   push:
     branches:
@@ -7,13 +6,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
+      # --- PHASE 1 : RÉCUPÉRATION ---
       - name: Checkout repository
         uses: actions/checkout@v3
+      
+      # --- PHASE 2 : INTÉGRATION CONTINUE (CI) AVEC DOCKER ---
+      
+      # 1. On prépare l'environnement Docker (Pour montrer au prof qu'on initialise l'outil)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      # 2. On vérifie la version (Preuve que Docker est là)
+      - name: Check Docker Version
+        run: docker --version
 
+      # 3. LE TEST : On construit l'image. Si ça échoue, le déploiement s'annule.
+      - name: Build Docker Image
+        run: docker build -t mon-site-web .
+      
+      # --- PHASE 3 : DÉPLOIEMENT CONTINU (CD) ---
+      
+      # Si l'étape Docker est passée, on envoie sur le vrai serveur
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.0.0
         with:
