@@ -1,41 +1,63 @@
-name: CI/CD Pro
+name: CI/CD Pipeline Ultimate
+
+# Tâche 2 : S'exécuter sur main ET dev
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+      - dev
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  # JOB 1 : INTEGRATION CONTINUE (Tests & Build)
+  test-and-build:
     runs-on: ubuntu-latest
     steps:
-      # 1. Récupération du code
-      - name: Checkout repository
+      - name: 📥 Récupération du code
         uses: actions/checkout@v3
-      
-      # 2. Configuration de l'environnement Docker (Buildx)
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      
-      # 3. Connexion à Docker Hub
-      # IMPORTANT : Assure-toi que le secret DOCKER_USERNAME vaut bien "bryan456"
-      - name: Login to Docker Hub
+
+      # Tâche 2 : Installer dépendances & Lancer les tests
+      # Astuce de Senior : On utilise HTMLHint pour "tester" ton code HTML
+      - name: 🧪 Installation des outils de test
+        run: sudo npm install -g htmlhint
+
+      - name: 🔍 Exécution des Tests (Linting)
+        run: htmlhint index.html
+        # Si ton HTML est mal écrit, le pipeline s'arrête ici !
+
+      - name: 📦 Création de l'artefact (Simulation)
+        run: echo "Build artifact generated" > build.log
+
+      - name: 📄 Afficher les logs
+        run: cat build.log
+
+  # JOB 2 : LIVRAISON & DEPLOIEMENT (Seulement si les tests passent)
+  deploy:
+    needs: test-and-build # Attend que les tests soient OK
+    if: github.ref == 'refs/heads/main' # Ne déploie que si on est sur MAIN
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Récupération du code
+        uses: actions/checkout@v3
+
+      - name: 🐳 Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      # 4. Build et PUSH vers Docker Hub
-      # J'ai mis ton pseudo "gedfirst" ici en dur comme demandé
-      - name: Build and Push Docker Image
+
+      # Tâche 4 : Construire et Pousser l'image
+      - name: 🚀 Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: bryan456/site-bryan:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/site-bryan:latest
 
-      # 5. Déploiement FTP (InfinityFree)
-      - name: Deploy via FTP
+      # Tâche 5 : Déploiement (FTP InfinityFree)
+      - name: 📂 Deploy to Server (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.0.0
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -43,4 +65,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
           server-dir: /htdocs/
-          dry-run: false
+
+      # Tâche 5 (Fin) : Notification
+      - name: 🔔 Notification de succès
+        run: echo "::notice title=Déploiement::Le site a été déployé avec succès sur InfinityFree !"
