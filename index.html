@@ -1,411 +1,355 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBER-ODYSSEY :: DEVOPS EDITION</title>
-    <style>
-        /* --- 1. MOTEUR GRAPHIQUE --- */
-        :root {
-            --primary: #00f3ff;   /* Cyan */
-            --secondary: #bc13fe; /* Violet */
-            --tertiary: #ff0055;  /* Rouge/Rose */
-            --bg-deep: #050011;
-            --grid-color: rgba(188, 19, 254, 0.3);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBER-ODYSSEY :: DEVOPS EDITION</title>
 
-        body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-deep);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            user-select: none;
-            cursor: crosshair;
-        }
+<style>
+:root{
+    --primary:#00f3ff;
+    --secondary:#bc13fe;
+    --tertiary:#ff0055;
+    --bg:#050011;
+    --grid:rgba(188,19,254,.25);
+}
 
-        /* --- 2. SEQUENCE DE BOOT (BIOS) --- */
-        #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; z-index: 9999;
-            padding: 40px; font-family: 'Courier New', monospace;
-            color: var(--primary); font-size: 14px;
-            display: flex; flex-direction: column; justify-content: flex-end;
-        }
-        .boot-line { margin: 2px 0; text-shadow: 0 0 5px var(--primary); opacity: 0.8; }
-        .boot-success { color: #0f0; }
-        .boot-warning { color: #ff0; }
+*{box-sizing:border-box}
 
-        /* --- 3. ENVIRONNEMENT 3D --- */
-        .world-container {
-            position: absolute; width: 100%; height: 100%;
-            perspective: 800px; overflow: hidden;
-            opacity: 0; transition: opacity 2s; /* Apparait après le boot */
-        }
+body{
+    margin:0;
+    height:100vh;
+    background:radial-gradient(circle at top,#12002a,var(--bg));
+    color:#fff;
+    font-family:Segoe UI,sans-serif;
+    overflow:hidden;
+    cursor:crosshair;
+}
 
-        /* Le Soleil Rétro */
-        .sun {
-            position: absolute; bottom: 30%; left: 50%;
-            transform: translateX(-50%);
-            width: 40vh; height: 40vh;
-            border-radius: 50%;
-            background: linear-gradient(to top, var(--secondary), #ffea00);
-            box-shadow: 0 0 80px var(--secondary);
-            z-index: 1;
-            /* Lignes de découpe style années 80 */
-            -webkit-mask-image: repeating-linear-gradient(black, black 5%, transparent 5%, transparent 6%);
-            mask-image: repeating-linear-gradient(black, black 5%, transparent 5%, transparent 6%);
-        }
+/* ===== BOOT ===== */
+#boot-screen{
+    position:fixed;
+    inset:0;
+    background:#000;
+    z-index:9999;
+    padding:30px;
+    font-family:Courier New,monospace;
+    font-size:14px;
+    color:var(--primary);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+}
+.boot-line{opacity:.85;text-shadow:0 0 6px var(--primary)}
+.boot-success{color:#0f0}
 
-        /* Les Montagnes (Fond qui défile) */
-        .mountains {
-            position: absolute; bottom: 35%; left: 0;
-            width: 200%; height: 20vh;
-            background: linear-gradient(to top, #111, var(--secondary));
-            clip-path: polygon(
-                0% 100%, 5% 40%, 10% 80%, 15% 30%, 20% 70%, 25% 20%, 30% 80%, 
-                35% 30%, 40% 90%, 45% 40%, 50% 100%, 55% 40%, 60% 80%, 65% 30%, 
-                70% 70%, 75% 20%, 80% 80%, 85% 30%, 90% 90%, 95% 40%, 100% 100%
-            );
-            z-index: 2;
-            opacity: 0.5;
-            animation: scrollMounts 20s linear infinite;
-        }
-        @keyframes scrollMounts { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* ===== WORLD ===== */
+.world{
+    position:absolute;
+    inset:0;
+    perspective:900px;
+    opacity:0;
+    transition:opacity 2s ease;
+}
 
-        /* Le Sol (Grille 3D) */
-        .floor {
-            position: absolute; bottom: 0; width: 200%; height: 50%; left: -50%;
-            transform: rotateX(60deg);
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: moveFloor 1s linear infinite;
-            box-shadow: inset 0 0 200px var(--bg-deep);
-            z-index: 3;
-        }
-        @keyframes moveFloor { from { background-position: 0 0; } to { background-position: 0 60px; } }
+/* SUN */
+.sun{
+    position:absolute;
+    bottom:30%;
+    left:50%;
+    transform:translateX(-50%);
+    width:40vh;
+    height:40vh;
+    border-radius:50%;
+    background:linear-gradient(to top,var(--secondary),#ffe600);
+    box-shadow:0 0 120px var(--secondary);
+    mask:repeating-linear-gradient(#000 0 5%,transparent 5% 6%);
+}
 
-        /* --- 4. LE VAISSEAU (HERO) --- */
-        .hero-wrap {
-            position: absolute; bottom: 10%; left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            transition: transform 0.1s ease-out; /* Pour suivre la souris */
-        }
-        
-        .hero-ship {
-            width: 0; height: 0;
-            border-left: 40px solid transparent;
-            border-right: 40px solid transparent;
-            border-bottom: 100px solid black;
-            position: relative;
-            filter: drop-shadow(0 0 20px var(--primary));
-        }
-        /* Design Neon sur le vaisseau */
-        .hero-ship::after {
-            content:''; position: absolute; top: 10px; left: -20px;
-            width: 40px; height: 80px;
-            background: linear-gradient(to bottom, var(--primary), transparent);
-            clip-path: polygon(50% 0, 0 100%, 100% 100%);
-        }
-        /* Réacteurs */
-        .engine-flame {
-            position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
-            width: 20px; height: 40px;
-            background: white; border-radius: 50%;
-            box-shadow: 0 0 20px var(--primary), 0 0 40px var(--secondary);
-            animation: flicker 0.1s infinite;
-        }
-        @keyframes flicker { 0% { height: 40px; opacity: 1; } 100% { height: 35px; opacity: 0.8; } }
+/* MOUNTAINS */
+.mountains{
+    position:absolute;
+    bottom:35%;
+    width:200%;
+    height:22vh;
+    background:linear-gradient(to top,#111,var(--secondary));
+    clip-path:polygon(
+        0% 100%,5% 40%,10% 80%,15% 30%,20% 70%,25% 20%,30% 80%,
+        35% 30%,40% 90%,45% 40%,50% 100%,55% 40%,60% 80%,
+        65% 30%,70% 70%,75% 20%,80% 80%,85% 30%,90% 90%,95% 40%,100% 100%
+    );
+    opacity:.45;
+    animation:mounts 25s linear infinite;
+}
+@keyframes mounts{to{transform:translateX(-50%)}}
 
-        /* --- 5. INTERFACE (HUD) --- */
-        .hud {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 100;
-            display: flex; justify-content: center; align-items: center;
-        }
+/* FLOOR */
+.floor{
+    position:absolute;
+    bottom:-10%;
+    width:200%;
+    height:60%;
+    left:-50%;
+    transform:rotateX(60deg);
+    background:
+        linear-gradient(var(--grid) 1px,transparent 1px),
+        linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:60px 60px;
+    animation:floor 1s linear infinite;
+    box-shadow:inset 0 0 300px #000;
+}
+@keyframes floor{to{background-position:0 60px}}
 
-        /* Panneau Central (Verre) */
-        .glass-panel {
-            background: rgba(10, 10, 20, 0.7);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-top: 4px solid var(--primary);
-            padding: 40px; width: 700px;
-            text-align: center;
-            border-radius: 20px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            transform: scale(0.9); opacity: 0;
-            transition: all 0.5s ease;
-            pointer-events: auto;
-        }
-        .glass-panel.active { transform: scale(1); opacity: 1; }
+/* HERO */
+.hero{
+    position:absolute;
+    bottom:12%;
+    left:50%;
+    transform:translateX(-50%);
+    transition:transform .15s ease;
+    filter:drop-shadow(0 0 25px var(--primary));
+}
+.ship{
+    width:0;height:0;
+    border-left:40px solid transparent;
+    border-right:40px solid transparent;
+    border-bottom:100px solid #000;
+    position:relative;
+}
+.ship::after{
+    content:"";
+    position:absolute;
+    top:10px;left:-20px;
+    width:40px;height:80px;
+    background:linear-gradient(var(--primary),transparent);
+    clip-path:polygon(50% 0,0 100%,100% 100%);
+}
+.flame{
+    position:absolute;
+    bottom:-30px;
+    left:50%;
+    transform:translateX(-50%);
+    width:18px;height:45px;
+    background:#fff;
+    border-radius:50%;
+    animation:flame .12s infinite alternate;
+    box-shadow:0 0 25px var(--primary);
+}
+@keyframes flame{to{height:35px;opacity:.8}}
 
-        h1 { margin: 0; font-size: 3rem; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px var(--primary); }
-        .subtitle { color: #aaa; margin: 15px 0 30px 0; font-size: 1.1rem; line-height: 1.6; }
-        
-        .tag {
-            display: inline-block; padding: 5px 15px; border: 1px solid var(--primary);
-            color: var(--primary); border-radius: 50px; font-size: 0.8rem; margin-bottom: 20px;
-            box-shadow: 0 0 10px var(--primary);
-        }
+/* HUD */
+.hud{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+}
+.panel{
+    width:min(90%,720px);
+    background:rgba(10,10,20,.75);
+    backdrop-filter:blur(16px);
+    border-radius:20px;
+    padding:40px;
+    text-align:center;
+    transform:scale(.85);
+    opacity:0;
+    transition:.5s ease;
+    pointer-events:auto;
+    border-top:4px solid var(--primary);
+}
+.panel.active{transform:scale(1);opacity:1}
 
-        /* Bouton Hyper-Vitesse */
-        .warp-btn {
-            background: transparent; color: white; border: 2px solid white;
-            padding: 15px 60px; font-size: 1.2rem; font-weight: bold;
-            text-transform: uppercase; letter-spacing: 3px; cursor: pointer;
-            transition: 0.3s; position: relative; overflow: hidden;
-            box-shadow: 0 0 15px rgba(255,255,255,0.3);
-        }
-        .warp-btn:hover { background: white; color: black; box-shadow: 0 0 40px white; }
-        .warp-btn::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            animation: shine 3s infinite;
-        }
-        @keyframes shine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+.tag{
+    display:inline-block;
+    border:1px solid var(--primary);
+    padding:6px 16px;
+    border-radius:30px;
+    color:var(--primary);
+    font-size:.8rem;
+    margin-bottom:15px;
+}
 
-        /* Stats Techniques */
-        .stats-row { display: flex; justify-content: space-around; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
-        .stat-item h3 { font-size: 0.8rem; color: #888; margin: 0; }
-        .stat-item p { font-size: 1.2rem; color: white; margin: 5px 0 0 0; font-weight: bold; }
+h1{
+    margin:0;
+    font-size:3rem;
+    letter-spacing:4px;
+    text-shadow:0 0 20px var(--primary);
+}
 
-        /* --- 6. EFFETS SPECIAUX --- */
-        /* Particules d'Hyper-Espace */
-        .star-field {
-            position: absolute; top: 50%; left: 50%; width: 1px; height: 1px;
-            z-index: 5;
-        }
-        .star {
-            position: absolute; background: white; width: 2px; height: 2px;
-            border-radius: 50%; opacity: 0;
-        }
+.subtitle{color:#aaa;margin:20px 0}
 
-        /* Overlay CRT (Scanlines) */
-        .crt-scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 4px; z-index: 900;
-        }
+.warp{
+    margin-top:20px;
+    padding:15px 60px;
+    background:none;
+    color:#fff;
+    border:2px solid #fff;
+    letter-spacing:3px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.3s;
+}
+.warp:hover{background:#fff;color:#000}
 
-        /* Visualiseur Audio Fake */
-        .audio-viz {
-            position: absolute; bottom: 20px; right: 20px; display: flex; gap: 5px; z-index: 200; align-items: flex-end; height: 50px;
-        }
-        .bar { width: 5px; background: var(--primary); animation: equalizer 0.5s ease-in-out infinite alternate; }
-        .bar:nth-child(1) { height: 20px; animation-duration: 0.4s; }
-        .bar:nth-child(2) { height: 40px; animation-duration: 0.6s; }
-        .bar:nth-child(3) { height: 30px; animation-duration: 0.3s; }
-        .bar:nth-child(4) { height: 50px; animation-duration: 0.5s; }
-        @keyframes equalizer { 0% { height: 10px; opacity: 0.5; } 100% { height: 50px; opacity: 1; } }
+/* STATS */
+.stats{
+    display:flex;
+    justify-content:space-around;
+    margin-top:30px;
+    border-top:1px solid rgba(255,255,255,.1);
+    padding-top:20px;
+}
+.stats h3{font-size:.8rem;color:#888;margin:0}
+.stats p{margin:5px 0 0;font-weight:bold}
 
-    </style>
+/* STARS */
+.stars{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+}
+.star{
+    position:absolute;
+    width:2px;height:2px;
+    background:#fff;
+    opacity:0;
+}
+</style>
 </head>
+
 <body>
 
-    <div id="boot-screen">
-        <div class="boot-line">> SYSTEM CHECK...</div>
+<div id="boot-screen"></div>
+
+<div class="world" id="world">
+    <div class="sun"></div>
+    <div class="mountains"></div>
+    <div class="floor" id="floor"></div>
+
+    <div class="hero" id="hero">
+        <div class="ship"></div>
+        <div class="flame"></div>
     </div>
 
-    <div class="world-container" id="world">
-        <div class="sun"></div>
-        <div class="mountains"></div>
-        <div class="floor" id="floor"></div>
-        
-        <div class="hero-wrap" id="hero">
-            <div class="hero-ship"></div>
-            <div class="engine-flame"></div>
-        </div>
+    <div class="stars" id="stars"></div>
+</div>
 
-        <div class="star-field" id="stars"></div>
-    </div>
+<div class="hud">
+    <div class="panel" id="panel">
+        <span class="tag" id="tag">INITIALISATION</span>
+        <h1 id="title">CYBER-ODYSSEY</h1>
+        <p class="subtitle" id="desc">
+            Interface immersive DevOps.<br>
+            Traverse le pipeline CI/CD à vitesse lumière.
+        </p>
 
-    <div class="hud">
-        <div class="glass-panel" id="panel">
-            <span class="tag" id="stage-tag">INITIALISATION</span>
-            <h1 id="stage-title">CYBER-ODYSSEY</h1>
-            <p class="subtitle" id="stage-desc">
-                Bienvenue dans l'interface de visualisation DevOps. <br>
-                Préparez-vous à traverser le pipeline CI/CD à vitesse lumière.
-            </p>
-            
-            <button class="warp-btn" onclick="triggerWarp()">START ENGINE</button>
+        <button class="warp" id="warp">START ENGINE</button>
 
-            <div class="stats-row" id="tech-stats">
-                <div class="stat-item"><h3>VITESSE</h3><p>0 KM/S</p></div>
-                <div class="stat-item"><h3>STATUS</h3><p>OFFLINE</p></div>
-                <div class="stat-item"><h3>NEXT HOP</h3><p>UNKNOWN</p></div>
-            </div>
+        <div class="stats" id="stats">
+            <div><h3>VITESSE</h3><p>0%</p></div>
+            <div><h3>STATUS</h3><p>OFFLINE</p></div>
+            <div><h3>NEXT</h3><p>UNKNOWN</p></div>
         </div>
     </div>
+</div>
 
-    <div class="crt-scanlines"></div>
-    <div class="audio-viz">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    </div>
+<script>
+/* ===== BOOT ===== */
+const bootLines=[
+"> SYSTEM CHECK... OK",
+"> DOCKER DAEMON... READY",
+"> TERRAFORM STATE... SYNC",
+"> GRAPHICS ENGINE... ONLINE",
+"> WELCOME USER"
+];
+const boot=document.getElementById("boot-screen");
+let i=0;
+function bootSeq(){
+    if(i<bootLines.length){
+        const d=document.createElement("div");
+        d.className="boot-line boot-success";
+        d.textContent=bootLines[i++];
+        boot.appendChild(d);
+        setTimeout(bootSeq,300);
+    }else{
+        setTimeout(()=>{
+            boot.remove();
+            world.style.opacity=1;
+            panel.classList.add("active");
+        },800);
+    }
+}
+window.onload=bootSeq;
 
-    <script>
-        // --- DONNEES DU SCENARIO ---
-        const levels = [
-            {
-                tag: "PHASE 1 : GITHUB",
-                title: "CODE REPOSITORY",
-                desc: "Nous entrons dans la dimension <strong>Git</strong>. C'est le coffre-fort temporel du projet. Il permet de sauvegarder chaque version du code et de fusionner le travail de toute l'équipe sans conflit.",
-                color: "#bc13fe",
-                stats: ["COMMIT: SHA-256", "BRANCH: MAIN", "SECURE"]
-            },
-            {
-                tag: "PHASE 2 : DOCKER",
-                title: "CONTAINER ZONE",
-                desc: "Activation du champ de force <strong>Docker</strong>. L'application est isolée dans une capsule standardisée (Image Alpine). Plus de bugs liés à l'environnement : ça marche partout.",
-                color: "#00f3ff",
-                stats: ["IMG: NGINX", "VOL: BIND", "ISOLATED"]
-            },
-            {
-                tag: "PHASE 3 : TERRAFORM",
-                title: "INFRA ARCHITECT",
-                desc: "Déploiement de la réalité via <strong>Terraform</strong>. L'infrastructure est définie par le code. En une commande, tout l'univers du projet (Serveur, Réseau) est construit.",
-                color: "#ff0055",
-                stats: ["IAC: ACTIVE", "STATE: LOCKED", "BUILT"]
-            },
-            {
-                tag: "MISSION COMPLETE",
-                title: "SYSTEM ONLINE",
-                desc: "Félicitations Senior Dev. Le pipeline est opérationnel. <br>Git + Docker + Terraform = La trinité DevOps parfaite.",
-                color: "#0f0",
-                stats: ["UPTIME: 100%", "LATENCY: 1ms", "LEGEND"]
-            }
-        ];
+/* ===== DATA ===== */
+const levels=[
+{tag:"PHASE 1 : GITHUB",title:"CODE REPOSITORY",desc:"Versioning, branches et collaboration sécurisée.",color:"#bc13fe"},
+{tag:"PHASE 2 : DOCKER",title:"CONTAINER ZONE",desc:"Applications isolées, portables et reproductibles.",color:"#00f3ff"},
+{tag:"PHASE 3 : TERRAFORM",title:"INFRA AS CODE",desc:"L’infrastructure décrite, versionnée et automatisée.",color:"#ff0055"},
+{tag:"MISSION COMPLETE",title:"SYSTEM ONLINE",desc:"Pipeline DevOps opérationnel.",color:"#0f0"}
+];
 
-        let currentLevel = -1;
-        
-        // --- LOGIQUE DE BOOT ---
-        const bootScreen = document.getElementById('boot-screen');
-        const bootLines = [
-            "> MOUNTING VOLUMES... OK",
-            "> LOADING KERNEL DRIVERS... OK",
-            "> CONNECTING TO DOCKER DAEMON... SUCCESS",
-            "> CHECKING TERRAFORM STATE... SYNCHRONIZED",
-            "> INITIALIZING GRAPHICS ENGINE... READY",
-            "> WELCOME USER."
-        ];
+let lvl=-1;
 
-        let lineIndex = 0;
-        function typeBoot() {
-            if(lineIndex < bootLines.length) {
-                const div = document.createElement('div');
-                div.className = 'boot-line';
-                if(bootLines[lineIndex].includes("OK") || bootLines[lineIndex].includes("SUCCESS")) div.classList.add('boot-success');
-                div.innerText = bootLines[lineIndex];
-                bootScreen.appendChild(div);
-                lineIndex++;
-                setTimeout(typeBoot, 300);
-            } else {
-                setTimeout(() => {
-                    bootScreen.style.display = 'none';
-                    document.getElementById('world').style.opacity = '1';
-                    document.getElementById('panel').classList.add('active');
-                }, 1000);
-            }
-        }
-        // Lancer le boot au chargement
-        window.onload = typeBoot;
+/* ===== STARS (ONCE) ===== */
+const stars=document.getElementById("stars");
+for(let s=0;s<60;s++){
+    const star=document.createElement("div");
+    star.className="star";
+    stars.appendChild(star);
+}
 
-        // --- MOTEUR PHYSIQUE ---
-        const floor = document.getElementById('floor');
-        const hero = document.getElementById('hero');
-        const stars = document.getElementById('stars');
-        const panel = document.getElementById('panel');
+/* ===== MOUSE ===== */
+document.addEventListener("mousemove",e=>{
+    const x=(e.clientX/window.innerWidth-.5)*60;
+    hero.style.transform=`translateX(calc(-50% + ${x}px)) rotateZ(${x*.3}deg)`;
+});
 
-        // Effet de Parallaxe (Vaisseau qui suit la souris)
-        document.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth - 0.5) * 100; // -50 à 50
-            const rotate = x * 0.5; // Rotation légère
-            hero.style.transform = `translateX(calc(-50% + ${x}px)) rotateZ(${rotate}deg)`;
-        });
+/* ===== WARP ===== */
+warp.onclick=()=>{
+    panel.classList.remove("active");
+    floor.style.animationDuration=".15s";
 
-        // --- GESTION DU WARP (JEU) ---
-        function triggerWarp() {
-            // 1. Cacher le panneau
-            panel.classList.remove('active');
-            
-            // 2. Accélération Visuelle
-            floor.style.animationDuration = '0.1s'; // Sol ultra rapide
-            createStars(); // Lancer les étoiles
-            hero.style.filter = "drop-shadow(0 0 50px white)"; // Glow intense
+    document.querySelectorAll(".star").forEach(st=>{
+        const a=Math.random()*Math.PI*2;
+        st.style.left="50%";
+        st.style.top="50%";
+        st.animate([
+            {transform:"scale(0)",opacity:1},
+            {transform:`translate(${Math.cos(a)*1200}px,${Math.sin(a)*1200}px) scale(4)`,opacity:0}
+        ],{duration:900});
+    });
 
-            // 3. Attendre 2 secondes (le voyage)
-            setTimeout(() => {
-                nextLevel();
-            }, 2500);
-        }
+    setTimeout(next,2000);
+};
 
-        function createStars() {
-            // Créer 50 étoiles qui explosent
-            for(let i=0; i<50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const angle = Math.random() * 360;
-                const dist = Math.random() * 500 + 100;
-                
-                star.style.transform = `rotate(${angle}deg) translateX(${dist}px)`;
-                stars.appendChild(star);
+function next(){
+    lvl++;
+    const d=levels[Math.min(lvl,levels.length-1)];
+    document.documentElement.style.setProperty("--primary",d.color);
 
-                // Animation manuelle
-                star.animate([
-                    { transform: 'translate(-50%, -50%) scale(0)', opacity: 1 },
-                    { transform: `translate(${Math.cos(angle)*1000}px, ${Math.sin(angle)*1000}px) scale(5)`, opacity: 0 }
-                ], { duration: 1000, iterations: Infinity });
-            }
-        }
+    tag.textContent=d.tag;
+    title.textContent=d.title;
+    desc.innerHTML=d.desc;
 
-        function stopStars() {
-            stars.innerHTML = ''; // Nettoyer les étoiles
-        }
+    stats.innerHTML=`
+        <div><h3>VITESSE</h3><p>${(lvl+1)*25}%</p></div>
+        <div><h3>STATUS</h3><p style="color:${d.color}">ONLINE</p></div>
+        <div><h3>NODE</h3><p>OK</p></div>
+    `;
 
-        function nextLevel() {
-            currentLevel++;
-            const data = levels[Math.min(currentLevel, levels.length - 1)];
+    floor.style.animationDuration="1s";
+    panel.classList.add("active");
 
-            // Ralentir
-            floor.style.animationDuration = '1s';
-            stopStars();
-            hero.style.filter = `drop-shadow(0 0 20px ${data.color})`;
-            
-            // Mettre à jour l'UI
-            document.documentElement.style.setProperty('--primary', data.color);
-            document.getElementById('stage-tag').innerText = data.tag;
-            document.getElementById('stage-title').innerText = data.title;
-            document.getElementById('stage-desc').innerHTML = data.desc;
-            
-            // Mettre à jour les stats
-            const statsDiv = document.getElementById('tech-stats');
-            statsDiv.innerHTML = `
-                <div class="stat-item"><h3>VITESSE</h3><p>${(currentLevel+1)*25}% LIGHTSPEED</p></div>
-                <div class="stat-item"><h3>${data.stats[0].split(':')[0]}</h3><p>${data.stats[0].split(':')[1]}</p></div>
-                <div class="stat-item"><h3>STATUS</h3><p style="color:${data.color}">${data.stats[2]}</p></div>
-            `;
-
-            // Réafficher le panneau
-            panel.classList.add('active');
-
-            // Gérer le bouton fin
-            const btn = document.querySelector('.warp-btn');
-            if (currentLevel >= levels.length - 1) {
-                btn.innerText = "ACCÈS AUTORISÉ";
-                btn.onclick = () => alert("Félicitations ! Vous avez réussi le module DevOps.");
-                
-                // Feu d'artifice final (simple changement de couleur sol)
-                floor.style.backgroundImage = `linear-gradient(#0f0 1px, transparent 1px), linear-gradient(90deg, #0f0 1px, transparent 1px)`;
-            } else {
-                btn.innerText = "ENGAGE WARP DRIVE";
-            }
-        }
-
-    </script>
+    if(lvl>=levels.length-1){
+        warp.textContent="ACCESS GRANTED";
+        warp.onclick=()=>alert("Module DevOps validé 🚀");
+    }else{
+        warp.textContent="ENGAGE WARP";
+    }
+}
+</script>
 </body>
 </html>
